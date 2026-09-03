@@ -11,7 +11,33 @@ router = APIRouter()
 
 @router.get("/assets", response_model=list[AssetOut])
 def list_assets(db: Session = Depends(get_db)):
-    return db.query(Asset).order_by(Asset.symbol).all()
+    assets = db.query(Asset).order_by(Asset.symbol).all()
+    result = []
+    for asset in assets:
+        last_two = (
+            db.query(PriceTick)
+            .filter(PriceTick.asset_id == asset.id)
+            .order_by(desc(PriceTick.recorded_at))
+            .limit(2)
+            .all()
+        )
+        last_price = last_two[0].price if last_two else None
+        last_updated = last_two[0].recorded_at if last_two else None
+        change_pct = None
+        if len(last_two) == 2 and last_two[1].price:
+            change_pct = (last_two[0].price - last_two[1].price) / last_two[1].price * 100
+        result.append(
+            AssetOut(
+                id=asset.id,
+                symbol=asset.symbol,
+                display_name=asset.display_name,
+                asset_type=asset.asset_type,
+                last_price=last_price,
+                last_updated=last_updated,
+                change_pct=change_pct,
+            )
+        )
+    return result
 
 
 @router.get("/assets/{symbol}/prices", response_model=list[PriceTickOut])
@@ -38,12 +64,18 @@ def list_anomalies(limit: int = 50, db: Session = Depends(get_db)):
         .limit(limit)
         .all()
     )
-    result = []
-    for anomaly, symbol in rows:
-        item = AnomalyOut.model_validate(anomaly)
-        item.symbol = symbol
-        result.append(item)
-    return result
+    return [
+        AnomalyOut(
+            id=anomaly.id,
+            asset_id=anomaly.asset_id,
+            symbol=symbol,
+            zscore=anomaly.zscore,
+            direction=anomaly.direction,
+            message=anomaly.message,
+            created_at=anomaly.created_at,
+        )
+        for anomaly, symbol in rows
+    ]
 
 
 @router.post("/devices", status_code=201)

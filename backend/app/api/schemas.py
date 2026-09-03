@@ -8,6 +8,9 @@ class AssetOut(BaseModel):
     symbol: str
     display_name: str
     asset_type: str
+    last_price: float | None = None
+    last_updated: datetime | None = None
+    change_pct: float | None = None
 
     class Config:
         from_attributes = True

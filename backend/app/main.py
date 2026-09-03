@@ -1,11 +1,15 @@
 import logging
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 
 from app.api.routes import router
 from app.core.database import Base, engine
 from app.workers.scheduler import start_scheduler
+
+STATIC_DIR = Path(__file__).parent / "static"
 
 logging.basicConfig(level=logging.INFO)
 
@@ -30,3 +34,8 @@ def on_startup():
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
+
+@app.get("/dashboard")
+def dashboard():
+    return FileResponse(STATIC_DIR / "dashboard.html")

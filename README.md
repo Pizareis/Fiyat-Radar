@@ -32,6 +32,10 @@ Postgres satırıyla değiştir.
 API `http://localhost:8000/api` altında yayında olur. Sunucu açılınca scheduler otomatik
 başlar ve ilk veri çekimini hemen yapar.
 
+**Node.js kurmadan hızlı önizleme:** `http://localhost:8000/dashboard` — backend'in kendi
+servis ettiği, Chart.js (CDN) kullanan tek dosyalık bir dashboard. Asıl React uygulamasıyla
+ayni tasarımı paylaşır, build adımı gerektirmez.
+
 **Not:** Bu geliştirme ortamının network'ü Binance/CoinGecko gibi bazı domainlere erişimi
 kısıtlıyordu (SSL handshake hatası) — döviz API'si (open.er-api.com) buradan test edildi ve
 çalıştı. Kendi makinende (normal internet erişimiyle) kripto tarafı da sorunsuz çalışmalı;

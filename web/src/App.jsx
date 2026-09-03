@@ -2,8 +2,11 @@ import { useEffect, useState, useCallback } from "react";
 import { fetchAssets, fetchAssetPrices, fetchAnomalies } from "./api";
 import PriceChart from "./components/PriceChart";
 import AnomalyList from "./components/AnomalyList";
+import AssetList from "./components/AssetList";
+import StatsRow from "./components/StatsRow";
+import { formatTime } from "./utils";
 
-const POLL_MS = 30000;
+const POLL_MS = 15000;
 
 export default function App() {
   const [assets, setAssets] = useState([]);
@@ -34,37 +37,42 @@ export default function App() {
   useEffect(() => {
     if (!selected) return;
     let cancelled = false;
-    fetchAssetPrices(selected).then((data) => {
-      if (!cancelled) setPrices(data);
-    });
-    const id = setInterval(async () => {
+    const load = async () => {
       const data = await fetchAssetPrices(selected);
       if (!cancelled) setPrices(data);
-    }, POLL_MS);
+    };
+    load();
+    const id = setInterval(load, POLL_MS);
     return () => {
       cancelled = true;
       clearInterval(id);
     };
   }, [selected]);
 
+  const selectedAsset = assets.find((a) => a.symbol === selected);
+  const latestUpdate = assets.map((a) => a.last_updated).filter(Boolean).sort().pop();
+
   return (
     <div className="app">
-      <h1>Fiyat Radar</h1>
-      <p className="subtitle">Kripto ve doviz fiyatlarinda anomali takibi</p>
+      <div className="topbar">
+        <div className="brand">
+          <span className="dot" />
+          <h1>Fiyat Radar</h1>
+        </div>
+        <div className="updated-at">
+          {latestUpdate ? `Son guncelleme: ${formatTime(latestUpdate)}` : "Veri bekleniyor"}
+        </div>
+      </div>
+
+      <StatsRow assets={assets} anomalies={anomalies} />
+
       <div className="layout">
-        <div className="asset-list">
-          {assets.map((a) => (
-            <button
-              key={a.symbol}
-              className={a.symbol === selected ? "active" : ""}
-              onClick={() => setSelected(a.symbol)}
-            >
-              {a.display_name}
-            </button>
-          ))}
+        <div>
+          <p className="panel-title">Varliklar</p>
+          <AssetList assets={assets} selected={selected} onSelect={setSelected} />
         </div>
         <div>
-          {selected && <PriceChart symbol={selected} prices={prices} />}
+          <PriceChart asset={selectedAsset} prices={prices} />
           <AnomalyList anomalies={anomalies} />
         </div>
       </div>
