@@ -1,0 +1,16 @@
+{
+  "expo": {
+    "name": "Fiyat Radar",
+    "slug": "fiyat-radar",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "android": {
+      "package": "com.fiyatradar.app"
+    },
+    "ios": {
+      "bundleIdentifier": "com.fiyatradar.app"
+    },
+    "plugins": ["expo-notifications"]
+  }
+}
