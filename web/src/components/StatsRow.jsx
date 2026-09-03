@@ -10,7 +10,7 @@ export default function StatsRow({ assets, anomalies }) {
       </div>
       <div className="stat-card">
         <div className="label">Aktif Anomali</div>
-        <div className="value">{anomalies.length}</div>
+        <div className="value green">{anomalies.length}</div>
       </div>
       <div className="stat-card">
         <div className="label">Kripto / Doviz</div>

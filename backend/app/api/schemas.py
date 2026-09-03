@@ -11,6 +11,9 @@ class AssetOut(BaseModel):
     last_price: float | None = None
     last_updated: datetime | None = None
     change_pct: float | None = None
+    session_high: float | None = None
+    session_low: float | None = None
+    sparkline: list[float] = []
 
     class Config:
         from_attributes = True

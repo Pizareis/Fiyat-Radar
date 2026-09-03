@@ -14,18 +14,22 @@ def list_assets(db: Session = Depends(get_db)):
     assets = db.query(Asset).order_by(Asset.symbol).all()
     result = []
     for asset in assets:
-        last_two = (
+        recent = (
             db.query(PriceTick)
             .filter(PriceTick.asset_id == asset.id)
             .order_by(desc(PriceTick.recorded_at))
-            .limit(2)
+            .limit(20)
             .all()
         )
-        last_price = last_two[0].price if last_two else None
-        last_updated = last_two[0].recorded_at if last_two else None
+        recent = list(reversed(recent))  # oldest -> newest
+
+        last_price = recent[-1].price if recent else None
+        last_updated = recent[-1].recorded_at if recent else None
         change_pct = None
-        if len(last_two) == 2 and last_two[1].price:
-            change_pct = (last_two[0].price - last_two[1].price) / last_two[1].price * 100
+        if len(recent) >= 2 and recent[-2].price:
+            change_pct = (recent[-1].price - recent[-2].price) / recent[-2].price * 100
+
+        prices = [t.price for t in recent]
         result.append(
             AssetOut(
                 id=asset.id,
@@ -35,6 +39,9 @@ def list_assets(db: Session = Depends(get_db)):
                 last_price=last_price,
                 last_updated=last_updated,
                 change_pct=change_pct,
+                session_high=max(prices) if prices else None,
+                session_low=min(prices) if prices else None,
+                sparkline=prices,
             )
         )
     return result

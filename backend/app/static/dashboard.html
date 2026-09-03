@@ -6,114 +6,183 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
   :root {
-    --bg: #0b0d12;
-    --panel: #12151c;
-    --panel-2: #171b24;
-    --border: #232834;
-    --text: #e8eaed;
-    --text-dim: #8b93a1;
-    --accent: #5b8def;
-    --accent-dim: rgba(91, 141, 239, 0.12);
-    --green: #34d399;
-    --red: #f87171;
-    --radius: 14px;
+    --bg: #06070a;
+    --panel: #0e1015;
+    --panel-2: #14161d;
+    --border: #1f222b;
+    --border-soft: #191b23;
+    --text: #eef0f3;
+    --text-dim: #7c8494;
+    --text-dimmer: #565d6b;
+    --accent: #4f8cff;
+    --accent-dim: rgba(79, 140, 255, 0.10);
+    --green: #17c78f;
+    --green-dim: rgba(23, 199, 143, 0.12);
+    --red: #ff5c7a;
+    --red-dim: rgba(255, 92, 122, 0.12);
+    --amber: #f0b429;
+    --radius: 16px;
+    --mono: "SFMono-Regular", "Cascadia Code", Consolas, "Roboto Mono", monospace;
   }
   * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
   body {
-    margin: 0;
     font-family: -apple-system, "Segoe UI", Roboto, Inter, sans-serif;
-    background: var(--bg);
+    background:
+      radial-gradient(1200px 500px at 15% -10%, rgba(79,140,255,0.08), transparent 60%),
+      radial-gradient(900px 500px at 100% 0%, rgba(23,199,143,0.06), transparent 55%),
+      var(--bg);
     color: var(--text);
     -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
   }
-  .app { max-width: 1180px; margin: 0 auto; padding: 28px 24px 60px; }
+  .mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
 
-  .topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
-  .brand { display: flex; align-items: center; gap: 10px; }
-  .brand .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--green); box-shadow: 0 0 8px var(--green); }
-  .brand h1 { font-size: 1.35rem; font-weight: 700; margin: 0; letter-spacing: -0.02em; }
-  .live-badge { font-size: 0.75rem; color: var(--text-dim); display: flex; align-items: center; gap: 6px; }
-  .updated-at { font-size: 0.8rem; color: var(--text-dim); }
+  /* ---------- ticker tape ---------- */
+  .ticker-wrap {
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    overflow: hidden;
+    white-space: nowrap;
+    position: relative;
+  }
+  .ticker-wrap::before, .ticker-wrap::after {
+    content: ""; position: absolute; top: 0; bottom: 0; width: 40px; z-index: 2;
+  }
+  .ticker-wrap::before { left: 0; background: linear-gradient(90deg, var(--panel), transparent); }
+  .ticker-wrap::after { right: 0; background: linear-gradient(270deg, var(--panel), transparent); }
+  .ticker-track {
+    display: inline-flex;
+    animation: ticker-scroll 28s linear infinite;
+    padding: 9px 0;
+  }
+  .ticker-wrap:hover .ticker-track { animation-play-state: paused; }
+  @keyframes ticker-scroll {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+  .ticker-item {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 0 22px; font-size: 0.8rem; border-right: 1px solid var(--border-soft);
+  }
+  .ticker-item .sym { font-weight: 700; color: var(--text-dim); }
+  .ticker-item .val { font-weight: 700; }
+  .ticker-item .chg.up { color: var(--green); }
+  .ticker-item .chg.down { color: var(--red); }
+  .ticker-item .chg.flat { color: var(--text-dimmer); }
+
+  .app { max-width: 1220px; margin: 0 auto; padding: 24px 24px 60px; }
+
+  .topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; }
+  .brand { display: flex; align-items: center; gap: 11px; }
+  .brand .logo {
+    width: 34px; height: 34px; border-radius: 10px;
+    background: linear-gradient(135deg, var(--accent), #7c5cff);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem; box-shadow: 0 4px 16px rgba(79,140,255,0.35);
+  }
+  .brand h1 { font-size: 1.3rem; font-weight: 800; margin: 0; letter-spacing: -0.02em; }
+  .brand .tag { font-size: 0.68rem; color: var(--text-dim); font-weight: 600; letter-spacing: 0.03em; }
+  .status-pill {
+    display: flex; align-items: center; gap: 7px; font-size: 0.76rem; color: var(--text-dim);
+    background: var(--panel); border: 1px solid var(--border); padding: 6px 12px; border-radius: 999px;
+  }
+  .status-pill .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 8px var(--green); animation: pulse 2s ease-in-out infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
 
   .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 22px; }
   .stat-card {
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 16px 18px;
+    background: linear-gradient(180deg, var(--panel-2), var(--panel));
+    border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 18px;
   }
-  .stat-card .label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-dim); margin-bottom: 8px; }
-  .stat-card .value { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em; }
+  .stat-card .label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-dim); margin-bottom: 8px; font-weight: 600; }
+  .stat-card .value { font-size: 1.55rem; font-weight: 800; letter-spacing: -0.02em; }
   .stat-card .value.green { color: var(--green); }
-  .stat-card .value.red { color: var(--red); }
 
-  .layout { display: grid; grid-template-columns: 260px 1fr; gap: 18px; align-items: start; }
+  .layout { display: grid; grid-template-columns: 300px 1fr; gap: 18px; align-items: start; }
 
-  .panel-title {
-    font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-dim);
-    margin: 0 0 12px 2px; font-weight: 600;
-  }
+  .panel-title { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-dim); margin: 0 0 12px 2px; font-weight: 700; }
 
   .asset-list { display: flex; flex-direction: column; gap: 8px; }
   .asset-card {
-    text-align: left; padding: 12px 14px; border-radius: 12px;
+    text-align: left; padding: 12px 13px; border-radius: 13px;
     border: 1px solid var(--border); background: var(--panel);
     cursor: pointer; color: var(--text); width: 100%;
-    transition: border-color .15s ease, background .15s ease;
+    display: grid; grid-template-columns: 34px 1fr auto; gap: 11px; align-items: center;
+    transition: border-color .15s ease, background .15s ease, transform .1s ease;
   }
-  .asset-card:hover { border-color: #34394a; }
+  .asset-card:hover { border-color: #2c3140; transform: translateY(-1px); }
   .asset-card.active { border-color: var(--accent); background: var(--accent-dim); }
-  .asset-card .row1 { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
-  .asset-card .symbol { font-weight: 600; font-size: 0.95rem; }
-  .asset-card .badge {
-    font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.04em;
-    padding: 2px 6px; border-radius: 5px; font-weight: 700;
+  .icon-badge {
+    width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center;
+    font-size: 1rem; font-weight: 800; color: #fff; flex-shrink: 0;
   }
-  .badge.crypto { background: rgba(251, 191, 36, 0.15); color: #fbbf24; }
-  .badge.forex { background: rgba(91, 141, 239, 0.15); color: #5b8def; }
-  .asset-card .row2 { display: flex; justify-content: space-between; align-items: baseline; }
-  .asset-card .price { font-size: 0.88rem; color: var(--text-dim); font-variant-numeric: tabular-nums; }
-  .asset-card .change { font-size: 0.78rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .asset-main { min-width: 0; }
+  .asset-main .symbol { font-weight: 700; font-size: 0.9rem; display: block; }
+  .asset-main .type { font-size: 0.66rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.04em; }
+  .asset-right { text-align: right; }
+  .asset-right .price { font-size: 0.86rem; font-weight: 700; display: block; }
+  .asset-right .change { font-size: 0.74rem; font-weight: 700; }
   .change.up { color: var(--green); }
   .change.down { color: var(--red); }
-  .change.flat { color: var(--text-dim); }
+  .change.flat { color: var(--text-dimmer); }
+  .spark-row { grid-column: 1 / -1; margin-top: 2px; }
 
-  .card { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 18px; }
-  .card-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
-  .card-header h2 { font-size: 1.05rem; margin: 0; font-weight: 700; }
-  .card-header .current-price { font-size: 1.3rem; font-weight: 700; font-variant-numeric: tabular-nums; }
-  .card-sub { font-size: 0.8rem; color: var(--text-dim); margin-bottom: 16px; }
+  .card { background: linear-gradient(180deg, var(--panel-2), var(--panel)); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 18px; }
+  .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2px; }
+  .title-block { display: flex; align-items: center; gap: 12px; }
+  .card-header h2 { font-size: 1.15rem; margin: 0; font-weight: 800; }
+  .card-header .price-block { text-align: right; }
+  .card-header .current-price { font-size: 1.7rem; font-weight: 800; transition: color .3s ease; }
+  .card-header .current-change { font-size: 0.85rem; font-weight: 700; }
+  .card-sub { font-size: 0.8rem; color: var(--text-dim); margin: 4px 0 14px; }
   .chart-wrap { position: relative; height: 300px; }
 
-  .anomaly-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .flash-up { animation: flashUp 0.8s ease; }
+  .flash-down { animation: flashDown 0.8s ease; }
+  @keyframes flashUp { 0% { color: var(--green); text-shadow: 0 0 12px rgba(23,199,143,0.6); } 100% { color: var(--text); text-shadow: none; } }
+  @keyframes flashDown { 0% { color: var(--red); text-shadow: 0 0 12px rgba(255,92,122,0.6); } 100% { color: var(--text); text-shadow: none; } }
+
+  .mini-stats { display: flex; gap: 24px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border-soft); }
+  .mini-stat .label { font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-dim); margin-bottom: 3px; }
+  .mini-stat .value { font-size: 0.92rem; font-weight: 700; }
+
+  .anomaly-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border-soft); }
   .anomaly-row:last-child { border-bottom: none; }
-  .anomaly-icon {
-    width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center;
-    font-size: 1rem; flex-shrink: 0;
-  }
-  .anomaly-icon.spike { background: rgba(52, 211, 153, 0.12); color: var(--green); }
-  .anomaly-icon.drop { background: rgba(248, 113, 113, 0.12); color: var(--red); }
+  .anomaly-icon { width: 36px; height: 36px; border-radius: 11px; display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0; }
+  .anomaly-icon.spike { background: var(--green-dim); color: var(--green); }
+  .anomaly-icon.drop { background: var(--red-dim); color: var(--red); }
   .anomaly-body { flex: 1; min-width: 0; }
   .anomaly-symbol { font-weight: 700; font-size: 0.88rem; }
   .anomaly-msg { font-size: 0.82rem; color: var(--text-dim); margin-top: 2px; }
+  .anomaly-badge { font-size: 0.68rem; font-weight: 700; padding: 2px 7px; border-radius: 6px; margin-left: 8px; }
+  .anomaly-badge.spike { background: var(--green-dim); color: var(--green); }
+  .anomaly-badge.drop { background: var(--red-dim); color: var(--red); }
   .anomaly-time { font-size: 0.76rem; color: var(--text-dim); white-space: nowrap; }
 
   .empty { color: var(--text-dim); font-style: italic; font-size: 0.88rem; padding: 8px 0; }
 
-  @media (max-width: 800px) {
+  @media (max-width: 860px) {
     .stats-row { grid-template-columns: repeat(2, 1fr); }
     .layout { grid-template-columns: 1fr; }
   }
 </style>
 </head>
 <body>
+  <div class="ticker-wrap">
+    <div class="ticker-track" id="tickerTrack"></div>
+  </div>
+
   <div class="app">
     <div class="topbar">
       <div class="brand">
-        <span class="dot"></span>
-        <h1>Fiyat Radar</h1>
+        <div class="logo">📡</div>
+        <div>
+          <h1>Fiyat Radar</h1>
+          <div class="tag">KRIPTO &amp; DOVIZ ANOMALI RADARI</div>
+        </div>
       </div>
-      <div class="updated-at" id="updatedAt">Yukleniyor...</div>
+      <div class="status-pill"><span class="dot"></span><span id="updatedAt">Yukleniyor...</span></div>
     </div>
 
     <div class="stats-row">
@@ -123,7 +192,7 @@
       </div>
       <div class="stat-card">
         <div class="label">Aktif Anomali</div>
-        <div class="value" id="statAnomalies">-</div>
+        <div class="value green" id="statAnomalies">-</div>
       </div>
       <div class="stat-card">
         <div class="label">Kripto / Doviz</div>
@@ -143,11 +212,24 @@
       <div>
         <div class="card">
           <div class="card-header">
-            <h2 id="chartTitle">-</h2>
-            <div class="current-price" id="currentPrice">-</div>
+            <div class="title-block">
+              <div class="icon-badge" id="chartIcon" style="width:40px;height:40px;font-size:1.15rem;">-</div>
+              <div>
+                <h2 id="chartTitle">-</h2>
+                <div class="card-sub" id="chartSub" style="margin:2px 0 0;">Fiyat trendi</div>
+              </div>
+            </div>
+            <div class="price-block">
+              <div class="current-price mono" id="currentPrice">-</div>
+              <div class="current-change mono" id="currentChange">-</div>
+            </div>
           </div>
-          <div class="card-sub" id="chartSub">Fiyat trendi</div>
           <div class="chart-wrap"><canvas id="priceChart"></canvas></div>
+          <div class="mini-stats">
+            <div class="mini-stat"><div class="label">Oturum En Yuksek</div><div class="value mono" id="statHigh">-</div></div>
+            <div class="mini-stat"><div class="label">Oturum En Dusuk</div><div class="value mono" id="statLow">-</div></div>
+            <div class="mini-stat"><div class="label">Veri Noktasi</div><div class="value mono" id="statPoints">-</div></div>
+          </div>
         </div>
         <div class="card">
           <div class="card-header"><h2>Son Anomaliler</h2></div>
@@ -162,12 +244,50 @@ const API = "/api";
 let chart = null;
 let selectedSymbol = null;
 let assetsCache = [];
+const prevPrices = {};
+
+const CRYPTO_ICONS = {
+  BTCUSDT: { glyph: "₿", bg: "linear-gradient(135deg,#f7931a,#c9740a)" },
+  ETHUSDT: { glyph: "Ξ", bg: "linear-gradient(135deg,#8ea6f0,#627eea)" },
+  SOLUSDT: { glyph: "◎", bg: "linear-gradient(135deg,#c299ff,#9945ff)" },
+  BNBUSDT: { glyph: "B", bg: "linear-gradient(135deg,#f8d675,#f3ba2f)" },
+};
+const FOREX_FLAGS = { USD: "\u{1F1FA}\u{1F1F8}", EUR: "\u{1F1EA}\u{1F1FA}", GBP: "\u{1F1EC}\u{1F1E7}", TRY: "\u{1F1F9}\u{1F1F7}", JPY: "\u{1F1EF}\u{1F1F5}" };
+
+function hashColor(str) {
+  let h = 0;
+  for (let i = 0; i < str.length; i++) h = str.charCodeAt(i) + ((h << 5) - h);
+  const hue = Math.abs(h) % 360;
+  return `linear-gradient(135deg, hsl(${hue},70%,60%), hsl(${(hue+40)%360},70%,45%))`;
+}
+
+function getIcon(asset) {
+  if (asset.asset_type === "crypto") {
+    const c = CRYPTO_ICONS[asset.symbol];
+    if (c) return { content: c.glyph, bg: c.bg };
+    return { content: asset.symbol.replace("USDT", "").slice(0, 1), bg: hashColor(asset.symbol) };
+  }
+  const base = asset.symbol.split("-")[0];
+  return { content: FOREX_FLAGS[base] || "\u{1F4B1}", bg: "linear-gradient(135deg,#3a4258,#232834)" };
+}
+
+function sparklineSvg(prices, w = 100, h = 30) {
+  if (!prices || prices.length < 2) return "";
+  const min = Math.min(...prices), max = Math.max(...prices);
+  const range = max - min || 1;
+  const step = w / (prices.length - 1);
+  const pts = prices.map((p, i) => `${(i * step).toFixed(1)},${(h - ((p - min) / range) * (h - 4) - 2).toFixed(1)}`).join(" ");
+  const up = prices[prices.length - 1] >= prices[0];
+  const color = up ? "#17c78f" : "#ff5c7a";
+  return `<svg width="100%" height="${h}" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none"><polyline points="${pts}" fill="none" stroke="${color}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+}
 
 const fmtPrice = (v, type) => {
   if (v == null) return "-";
   const decimals = type === "forex" ? 4 : 2;
   return v.toLocaleString("tr-TR", { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
 };
+const fmtChange = (v) => (v == null ? "—" : `${v > 0 ? "+" : ""}${v.toFixed(2)}%`);
 const fmtTime = (iso) => new Date(iso).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
 
 async function getJson(path) {
@@ -176,23 +296,34 @@ async function getJson(path) {
   return res.json();
 }
 
+function renderTicker() {
+  const track = document.getElementById("tickerTrack");
+  const items = assetsCache.map((a) => {
+    const cls = a.change_pct == null ? "flat" : a.change_pct > 0 ? "up" : a.change_pct < 0 ? "down" : "flat";
+    return `<span class="ticker-item mono"><span class="sym">${a.display_name}</span><span class="val">${fmtPrice(a.last_price, a.asset_type)}</span><span class="chg ${cls}">${fmtChange(a.change_pct)}</span></span>`;
+  }).join("");
+  track.innerHTML = items + items; // duplicate for seamless loop
+}
+
 function renderAssetList() {
   const list = document.getElementById("assetList");
   list.innerHTML = "";
   assetsCache.forEach((a) => {
+    const icon = getIcon(a);
+    const changeClass = a.change_pct == null ? "flat" : a.change_pct > 0 ? "up" : a.change_pct < 0 ? "down" : "flat";
     const card = document.createElement("button");
     card.className = "asset-card" + (a.symbol === selectedSymbol ? " active" : "");
-    const changeClass = a.change_pct == null ? "flat" : a.change_pct > 0 ? "up" : a.change_pct < 0 ? "down" : "flat";
-    const changeText = a.change_pct == null ? "—" : `${a.change_pct > 0 ? "+" : ""}${a.change_pct.toFixed(2)}%`;
     card.innerHTML = `
-      <div class="row1">
+      <div class="icon-badge" style="background:${icon.bg}">${icon.content}</div>
+      <div class="asset-main">
         <span class="symbol">${a.display_name}</span>
-        <span class="badge ${a.asset_type}">${a.asset_type === "crypto" ? "Kripto" : "Doviz"}</span>
+        <span class="type">${a.asset_type === "crypto" ? "Kripto" : "Doviz"}</span>
       </div>
-      <div class="row2">
-        <span class="price">${fmtPrice(a.last_price, a.asset_type)}</span>
-        <span class="change ${changeClass}">${changeText}</span>
+      <div class="asset-right">
+        <span class="price mono">${fmtPrice(a.last_price, a.asset_type)}</span>
+        <span class="change mono ${changeClass}">${fmtChange(a.change_pct)}</span>
       </div>
+      <div class="spark-row">${sparklineSvg(a.sparkline)}</div>
     `;
     card.onclick = () => { selectedSymbol = a.symbol; renderAssetList(); loadPrices(); };
     list.appendChild(card);
@@ -203,18 +334,14 @@ async function loadAssets() {
   assetsCache = await getJson("/assets");
   if (!selectedSymbol && assetsCache.length) selectedSymbol = assetsCache[0].symbol;
   renderAssetList();
+  renderTicker();
 
   document.getElementById("statAssets").textContent = assetsCache.length;
   const cryptoCount = assetsCache.filter((a) => a.asset_type === "crypto").length;
-  const forexCount = assetsCache.length - cryptoCount;
-  document.getElementById("statSplit").textContent = `${cryptoCount} / ${forexCount}`;
+  document.getElementById("statSplit").textContent = `${cryptoCount} / ${assetsCache.length - cryptoCount}`;
 
-  const latest = assetsCache
-    .map((a) => a.last_updated)
-    .filter(Boolean)
-    .sort()
-    .pop();
-  document.getElementById("updatedAt").textContent = latest ? `Son guncelleme: ${fmtTime(latest)}` : "Veri bekleniyor";
+  const latest = assetsCache.map((a) => a.last_updated).filter(Boolean).sort().pop();
+  document.getElementById("updatedAt").textContent = latest ? `Canli - ${fmtTime(latest)}` : "Veri bekleniyor";
 }
 
 async function loadPrices() {
@@ -222,52 +349,57 @@ async function loadPrices() {
   const asset = assetsCache.find((a) => a.symbol === selectedSymbol);
   const prices = await getJson(`/assets/${selectedSymbol}/prices`);
 
+  const icon = asset ? getIcon(asset) : { content: "-", bg: "#232834" };
+  const iconEl = document.getElementById("chartIcon");
+  iconEl.style.background = icon.bg;
+  iconEl.textContent = icon.content;
+
   document.getElementById("chartTitle").textContent = asset ? asset.display_name : selectedSymbol;
-  document.getElementById("chartSub").textContent = `${prices.length} veri noktasi - ${asset?.asset_type === "crypto" ? "Kripto" : "Doviz"}`;
-  document.getElementById("currentPrice").textContent = asset ? fmtPrice(asset.last_price, asset.asset_type) : "-";
+  document.getElementById("chartSub").textContent = `${asset?.asset_type === "crypto" ? "Kripto" : "Doviz"} - canli fiyat akisi`;
+
+  const priceEl = document.getElementById("currentPrice");
+  const newPrice = asset ? fmtPrice(asset.last_price, asset.asset_type) : "-";
+  if (prevPrices[selectedSymbol] != null && asset?.last_price != null && prevPrices[selectedSymbol] !== asset.last_price) {
+    priceEl.classList.remove("flash-up", "flash-down");
+    void priceEl.offsetWidth;
+    priceEl.classList.add(asset.last_price > prevPrices[selectedSymbol] ? "flash-up" : "flash-down");
+  }
+  if (asset?.last_price != null) prevPrices[selectedSymbol] = asset.last_price;
+  priceEl.textContent = newPrice;
+
+  const changeEl = document.getElementById("currentChange");
+  const changeClass = asset?.change_pct == null ? "flat" : asset.change_pct > 0 ? "up" : asset.change_pct < 0 ? "down" : "flat";
+  changeEl.className = `current-change mono change ${changeClass}`;
+  changeEl.textContent = asset ? fmtChange(asset.change_pct) : "-";
+
+  document.getElementById("statHigh").textContent = asset ? fmtPrice(asset.session_high, asset.asset_type) : "-";
+  document.getElementById("statLow").textContent = asset ? fmtPrice(asset.session_low, asset.asset_type) : "-";
+  document.getElementById("statPoints").textContent = prices.length;
 
   const labels = prices.map((p) => fmtTime(p.recorded_at));
   const data = prices.map((p) => p.price);
 
   const ctx = document.getElementById("priceChart").getContext("2d");
+  const up = data.length < 2 || data[data.length - 1] >= data[0];
+  const lineColor = up ? "#17c78f" : "#ff5c7a";
   const gradient = ctx.createLinearGradient(0, 0, 0, 300);
-  gradient.addColorStop(0, "rgba(91, 141, 239, 0.28)");
-  gradient.addColorStop(1, "rgba(91, 141, 239, 0.0)");
+  gradient.addColorStop(0, up ? "rgba(23,199,143,0.25)" : "rgba(255,92,122,0.25)");
+  gradient.addColorStop(1, "rgba(0,0,0,0)");
 
   if (chart) chart.destroy();
   chart = new Chart(ctx, {
     type: "line",
-    data: {
-      labels,
-      datasets: [{
-        data,
-        borderColor: "#5b8def",
-        backgroundColor: gradient,
-        fill: true,
-        tension: 0.3,
-        pointRadius: 0,
-        pointHoverRadius: 4,
-        borderWidth: 2,
-      }],
-    },
+    data: { labels, datasets: [{ data, borderColor: lineColor, backgroundColor: gradient, fill: true, tension: 0.3, pointRadius: 0, pointHoverRadius: 4, borderWidth: 2 }] },
     options: {
-      responsive: true,
-      maintainAspectRatio: false,
+      responsive: true, maintainAspectRatio: false,
       interaction: { intersect: false, mode: "index" },
       scales: {
-        x: { ticks: { color: "#8b93a1", maxTicksLimit: 8 }, grid: { color: "#232834" } },
-        y: { ticks: { color: "#8b93a1" }, grid: { color: "#232834" } },
+        x: { ticks: { color: "#7c8494", maxTicksLimit: 8, font: { family: "monospace", size: 10 } }, grid: { color: "#1f222b" } },
+        y: { ticks: { color: "#7c8494", font: { family: "monospace", size: 10 } }, grid: { color: "#1f222b" } },
       },
       plugins: {
         legend: { display: false },
-        tooltip: {
-          backgroundColor: "#171b24",
-          borderColor: "#232834",
-          borderWidth: 1,
-          titleColor: "#e8eaed",
-          bodyColor: "#e8eaed",
-          padding: 10,
-        },
+        tooltip: { backgroundColor: "#14161d", borderColor: "#1f222b", borderWidth: 1, titleColor: "#eef0f3", bodyColor: "#eef0f3", padding: 10, bodyFont: { family: "monospace" } },
       },
     },
   });
@@ -286,10 +418,11 @@ async function loadAnomalies() {
     <div class="anomaly-row">
       <div class="anomaly-icon ${a.direction}">${a.direction === "spike" ? "&#9650;" : "&#9660;"}</div>
       <div class="anomaly-body">
-        <div class="anomaly-symbol">${a.symbol}</div>
+        <span class="anomaly-symbol">${a.symbol}</span>
+        <span class="anomaly-badge ${a.direction}">${a.direction === "spike" ? "SICRAMA" : "DUSUS"}</span>
         <div class="anomaly-msg">${a.message}</div>
       </div>
-      <div class="anomaly-time">${fmtTime(a.created_at)}</div>
+      <div class="anomaly-time mono">${fmtTime(a.created_at)}</div>
     </div>
   `).join("");
 }

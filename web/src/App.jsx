@@ -4,6 +4,7 @@ import PriceChart from "./components/PriceChart";
 import AnomalyList from "./components/AnomalyList";
 import AssetList from "./components/AssetList";
 import StatsRow from "./components/StatsRow";
+import TickerTape from "./components/TickerTape";
 import { formatTime } from "./utils";
 
 const POLL_MS = 15000;
@@ -53,29 +54,36 @@ export default function App() {
   const latestUpdate = assets.map((a) => a.last_updated).filter(Boolean).sort().pop();
 
   return (
-    <div className="app">
-      <div className="topbar">
-        <div className="brand">
-          <span className="dot" />
-          <h1>Fiyat Radar</h1>
+    <>
+      <TickerTape assets={assets} />
+      <div className="app">
+        <div className="topbar">
+          <div className="brand">
+            <div className="logo">📡</div>
+            <div>
+              <h1>Fiyat Radar</h1>
+              <div className="tag">KRIPTO &amp; DOVIZ ANOMALI RADARI</div>
+            </div>
+          </div>
+          <div className="status-pill">
+            <span className="dot" />
+            <span>{latestUpdate ? `Canli - ${formatTime(latestUpdate)}` : "Veri bekleniyor"}</span>
+          </div>
         </div>
-        <div className="updated-at">
-          {latestUpdate ? `Son guncelleme: ${formatTime(latestUpdate)}` : "Veri bekleniyor"}
+
+        <StatsRow assets={assets} anomalies={anomalies} />
+
+        <div className="layout">
+          <div>
+            <p className="panel-title">Varliklar</p>
+            <AssetList assets={assets} selected={selected} onSelect={setSelected} />
+          </div>
+          <div>
+            <PriceChart asset={selectedAsset} prices={prices} />
+            <AnomalyList anomalies={anomalies} />
+          </div>
         </div>
       </div>
-
-      <StatsRow assets={assets} anomalies={anomalies} />
-
-      <div className="layout">
-        <div>
-          <p className="panel-title">Varliklar</p>
-          <AssetList assets={assets} selected={selected} onSelect={setSelected} />
-        </div>
-        <div>
-          <PriceChart asset={selectedAsset} prices={prices} />
-          <AnomalyList anomalies={anomalies} />
-        </div>
-      </div>
-    </div>
+    </>
   );
 }

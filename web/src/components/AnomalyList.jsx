@@ -11,10 +11,11 @@ export default function AnomalyList({ anomalies }) {
         <div key={a.id} className="anomaly-row">
           <div className={`anomaly-icon ${a.direction}`}>{a.direction === "spike" ? "▲" : "▼"}</div>
           <div className="anomaly-body">
-            <div className="anomaly-symbol">{a.symbol}</div>
+            <span className="anomaly-symbol">{a.symbol}</span>
+            <span className={`anomaly-badge ${a.direction}`}>{a.direction === "spike" ? "SICRAMA" : "DUSUS"}</span>
             <div className="anomaly-msg">{a.message}</div>
           </div>
-          <div className="anomaly-time">{formatTime(a.created_at)}</div>
+          <div className="anomaly-time mono">{formatTime(a.created_at)}</div>
         </div>
       ))}
     </div>
